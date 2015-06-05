@@ -35,16 +35,13 @@ import kinesis.{KinesisUtils => KU}
  */
 object StreamingCounts {
 
+  private val AppName = "StreamingCounts"
 
   /**
-   * Starts our processing of a single Kinesis stream.
-   * Never ends.
+   * Private function to set up Spark Streaming
    *
    * @param config The configuration for our job using StreamingCountsConfig.scala
    */
-  // sets up the SparkConf in setUpSparkContext private function
-  private val AppName = "StreamingCounts"
-  // private function to set up Spark Streaming
   private def setUpSparkContext(config: StreamingCountsConfig): StreamingContext = {
     val streamingSparkContext = {
       val sparkConf = new SparkConf().setAppName(AppName).setMaster(config.master)
@@ -53,8 +50,12 @@ object StreamingCounts {
     streamingSparkContext
   }
 
-
-  // main function for Streaming Counts App
+  /**
+   * Starts our processing of a single Kinesis stream.
+   * Never ends.
+   *
+   * @param config The configuration for our job using StreamingCountsConfig.scala
+   */
   def execute(config: StreamingCountsConfig) {
 
     // setting up Spark Streaming connection to Kinesis
@@ -76,7 +77,7 @@ object StreamingCounts {
     // Spark Stream processing of raw events into aggregate events
     val unionStreams = streamingSparkContext.union(sparkDStreams)
     val event = unionStreams.map(byteArray => (SimpleEvent.fromJson(byteArray)))
-    val bucketed = event.map(simpleEvent => (simpleEvent.getBucket(), simpleEvent.eventType))
+    val bucketed = event.map(e => (e.bucket, e.`type`))
     val computedStream = bucketed.groupByKey()
     val countedEventTypesPerMinute = computedStream.map(row => (row._1, row._2.groupBy(identity).mapValues(_.size)))
 

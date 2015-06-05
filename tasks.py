@@ -9,62 +9,74 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
 
-from invoke import run, task
-import boto
 import datetime, json, uuid, time
-from boto import kinesis
 from functools import partial
 from random import choice
+
+from invoke import run, task
+
+import boto
+from boto import kinesis
 import boto.dynamodb2
 from boto.dynamodb2.fields import HashKey, RangeKey, KeysOnlyIndex, GlobalAllIndex
 from boto.dynamodb2.table import Table
 from boto.dynamodb2.types import NUMBER
 
-JAR_FILE  = "spark-streaming-example-project-0.1.jar"
+
+JAR_FILE  = "spark-streaming-example-project-0.1-0.jar"
+
+# Selection of EventType values
+COLORS = ['Red','Orange','Yellow','Green','Blue']
+
+# DynamoDB settings
+THROUGHPUT_READ = 20
+THROUGHPUT_WRITE = 20
+
+
+# AWS Kinesis
+def picker(seq):
+  """
+  Returns a new function that can be called without arguments
+  to select and return a random color
+  """
+  return partial(choice, seq)
+
+def create_event():
+  """
+  Returns a choice of color and builds and event
+  """
+  event_id = str(uuid.uuid4())
+  color_choice = picker(COLORS)
+
+  return (event_id, {
+    "id": event_id,
+    "timestamp": datetime.datetime.now().isoformat(),
+    "type": color_choice()
+  })
+
+def write_event(conn, stream_name):
+  """
+  Returns the event and event event_payload
+  """
+  event_id, event_payload = create_event()
+  event_json = json.dumps(event_payload)
+  conn.put_record(stream_name, event_json, event_id)
+  return event_json
+
 
 @task
-def load_kinesis():
+def generate_events(profile, region, stream):
     """
     load demo data with python generator script for SimpleEvents
 
     Usage:
        inv load_kinesis
     """
-    run("python scripts/data_load_kinesis.py", pty=True)
-
-
-@task
-def build_project():
-    """
-    build spark-streaming-example-project
-    and package into "fat jar" for spark-submit
-
-    Usage:
-       inv build_project
-    """
-    run("sbt assembly", pty=True)
-
-
-@task
-def get_spark():
-    """
-    wget Apache Spark zip file from github
-
-    Usage:
-       inv get_spark
-    """
-    run("wget https://github.com/apache/spark/archive/master.zip")
-
-@task
-def unzip_spark():
-    """
-    unzip Apache Spark zip file from github
-
-    Usage:
-       inv unzip_spark
-    """
-    run("unzip master.zip", pty=True)
-
+    conn = kinesis.connect_to_region(region, profile_name=profile)
+    while True:
+        event_json = write_event(conn, stream)
+        print "Event sent to Kinesis: {}".format(event_json)
+        time.sleep(.5)
 
 
 @task
@@ -85,113 +97,93 @@ def build_spark():
     Usage:
        inv build_spark
     """
-    run("mvn -Pkinesis-asl -DskipTests clean package", pty=True)
+    run("wget https://github.com/apache/spark/archive/master.zip")
+    run("unzip master.zip", pty=True)
+    run("cd spark-master && mvn -Pkinesis-asl -DskipTests clean package", pty=True)
 
 
 @task
-def test_project():
+def assemble_project():
     """
-    Compile project and test
+    build spark-streaming-example-project
+    and package into "fat jar" ready for spark-submit
 
     Usage:
-       inv test_project
+       inv assembly
     """
-    run("sbt test", pty=True)
+    run("sbt assembly", pty=True)
 
 
 @task
-def create_dynamodb_table():
+def create_profile(profile):
+    """
+    Create a profile
+
+    Usage:
+    inv create_profile profile
+    """
+    run("aws configure --profile {}".format(profile), pty=True)
+
+@task
+def create_dynamodb_table(profile, region, table):
     """
     DynamoDB table creation with AWS Boto library in Python
 
     Usage:
     inv create_dynamodb_table
     """
-    # AWS DynamoDB settings
-    dynamodb_log_postion_table_name = "AggregateRecords"
-    throughput_read_value = 20
-    throughput_write_value = 20
-    primary_key_field_name = "BucketStart"
-    secondary_key_field_name = "UpdatedAt"
-    # DynamoDB table creation
-    aggregate = Table.create(dynamodb_log_postion_table_name,
-                             schema=[HashKey(primary_key_field_name),
-                                     RangeKey(secondary_key_field_name),],
-                             throughput={'read': throughput_read_value, 'write': throughput_write_value})
-    print("Trying to create table in DynamoDB...it may take a couple of seconds")
-    time.sleep(10)
-    print("Almost there...still working")
-    time.sleep(10)
-    print("Going to try and insert some test data into table")
 
-    # test item to put into table
-    aggregate.put_item(data={
-        'BucketStart': '2015-06-22T08:35:00.000',
-        'UpdatedAt': '2015-06-22T08:35:12.345',
-        'EventType': 'Click-Event-Lisa-Smith',
-        'Count': '47'
-    })
-    print("Test item put in table AggregateRecords in DynamoDB")
+    connection = boto.dynamodb2.connect_to_region(region, profile_name=profile)
+    aggregate = Table.create(table,
+                             schema=[
+                                 HashKey("BucketStart"),
+                                 RangeKey("UpdatedAt"),
+                             ],
+                             throughput={
+                                 'read': THROUGHPUT_READ,
+                                 'write': THROUGHPUT_WRITE
+                             },
+                             connection=connection
+                             )
+
 
 @task
-def add_credentials():
+def create_kinesis_stream(profile, stream):
     """
-    Submit AWS creds to the credentials file
-
-    Usage:
-        inv add_credentials
-    """
-    run("aws configure", pty=True)
-
-@task
-def create_kinesis():
-    """
-    create 1 Kinesis stream named eventStream
+    create our Kinesis stream
 
     Usage:
         inv create_kinesis
     """
-    run("aws kinesis create-stream --stream-name eventStream --shard-count 1", pty=True)
 
+    # TODO: switch to use boto
+    run("aws kinesis create-stream --stream-name {} --shard-count 1 --profile {}".format(stream, profile), pty=True)
 
 @task
-def show_kinesis():
+def describe_kinesis_stream(profile, stream):
     """
     show status Kinesis stream named eventStream
 
     Usage:
         inv show_kinesis
     """
-    run("aws kinesis describe-stream --stream-name eventStream", pty=True)
+
+    # TODO: switch to use boto
+    run("aws kinesis describe-stream --stream-name {} --profile {}".format(stream, profile), pty=True)
 
 
 @task
-def kinesis_list_all():
-    """
-    shows all streams in Kinesis
-
-    Usage:
-        inv kinesis_list_all
-    """
-    run("aws kinesis list-streams", pty=True)
-
-
-@task
-def run_spark_streaming():
+def run_project(config_path):
     """
     Submits the compiled "fat jar" to Apache Spark and
-    starts spark streaming based on project settings
+    starts Spark Streaming based on project settings
 
     Usage:
         inv run_spark_streaming
     """
-    run("/home/ubuntu/spark/bin/spark-submit \
-        --class \
-        com.snowplowanalytics.spark.streaming.StreamingCountsApp \
-        --master \
-        local[4] \
-        /home/ubuntu/spark-streaming-example-project/target/scala-2.10/spark-streaming-example-project-0.1.0.jar \
-        --config \
-        /home/ubuntu/spark-streaming-example-project/src/main/resources/config.hocon.sample",
+    run("./spark/bin/spark-submit \
+        --class com.snowplowanalytics.spark.streaming.StreamingCountsApp \
+        --master local[4] \
+        ./target/scala-2.10/{} \
+        --config {}".format(JAR_FILE, config_path),
         pty=True)
-

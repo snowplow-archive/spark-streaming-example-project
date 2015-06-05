@@ -45,11 +45,11 @@ object SimpleEvent {
  *      (see BucketingStrategy.scala file for more details)
  *   2. A simple model of colors for this EventType:
  *      'Red','Orange','Yellow','Green', or 'Blue'
- *   example log: { "dateString": "2015-05-27T00:23:24.306091", "eventType": "Red" }
+ *   example log: {"timestamp": "2015-06-05T13:00:22.540374", "type": "Orange", "id": "018dd633-f4c3-4599-9b44-ebf71a1c519f"}
  */
-case class SimpleEvent(dateString: String, eventType: String) {
+case class SimpleEvent(id: String, timestamp: String, `type`: String) {
 
   // Function converts strings into Time Bucket using Bucketing Strategy
-  def getBucket() = BucketingStrategy.bucket(SimpleEvent.convertStringToDate(dateString))
+  val bucket = BucketingStrategy.bucket(SimpleEvent.convertStringToDate(timestamp))
 
 }
