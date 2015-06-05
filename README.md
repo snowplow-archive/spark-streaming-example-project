@@ -1,6 +1,6 @@
 # Spark Streaming Example Project
 
-[![Build Status](https://travis-ci.org/snowplow/spark-example-project.png)](https://travis-ci.org/snowplow/spark-example-project) [ ![Release] [release-image] ] [releases] [ ![License] [license-image] ] [license]
+[ ![Build Status] [travis-image] ] [travis]  [ ![Release] [release-image] ] [releases] [ ![License] [license-image] ] [license]
 
 ## Introduction
 
@@ -51,6 +51,72 @@ The 'fat jar' is now available as:
 target/scala-2.10/simple-project_2.10-0.1.jar
 ```
 
+## Developer Quickstart
+
+Assuming git, **[Vagrant] [vagrant-install]** and **[VirtualBox] [virtualbox-install]** installed:
+
+```bash
+ host$ git clone https://github.com/snowplow/spark-streaming-example-project.git
+ host$ cd spark-streaming-example-project
+ host$ vagrant up && vagrant ssh
+guest$ cd /vagrant
+guest$ sbt compile
+```
+
+## Tutorial
+
+```bash
+$ inv create_profile my-profile
+AWS Access Key ID [None]: ...
+AWS Secret Access Key [None]: ...
+Default region name [None]: eu-west-1
+Default output format [None]:
+```
+
+```bash
+$ inv create_kinesis_stream my-profile my-stream
+```
+
+Wait a minute and then:
+
+```bash
+$ inv describe_kinesis_stream my-profile my-stream
+{
+    "StreamDescription": {
+        "StreamStatus": "ACTIVE",
+        "StreamName": "my-stream",
+        "StreamARN": "arn:aws:kinesis:eu-west-1:719197435995:stream/my-stream",
+        "Shards": [
+            {
+                "ShardId": "shardId-000000000000",
+                "HashKeyRange": {
+                    "EndingHashKey": "340282366920938463463374607431768211455",
+                    "StartingHashKey": "0"
+                },
+                "SequenceNumberRange": {
+                    "StartingSequenceNumber": "49551350243544458458477304430170758137221526998466166786"
+                }
+            }
+        ]
+    }
+}
+```
+
+
+```bash
+$ inv create_dynamodb_table my-profile eu-west-1 my-table
+```
+
+Now start sending events to the stream:
+
+```bash
+$ inv generate_events my-profile eu-west-1 my-stream
+Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.064528", "type": "Green", "id": "4ec80fb1-0963-4e35-8f54-ce760499d974"}
+Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.757797", "type": "Red", "id": "eb84b0d1-f793-4213-8a65-2fb09eab8c5c"}
+Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:44.295972", "type": "Yellow", "id": "4654bdc8-86d4-44a3-9920-fee7939e2582"}
+...
+```
+
 ## Step 3 - Running Spark-Streaming-Example-Project on Local
 
 ```bash
@@ -77,7 +143,7 @@ To invoke/schedule your Spark job on EMR, check out:
 
 ## Copyright and license
 
-Copyright 2013-2015 Snowplow Analytics Ltd.
+Copyright 2015 Snowplow Analytics Ltd.
 
 Licensed under the [Apache License, Version 2.0] [license] (the "License");
 you may not use this software except in compliance with the License.
@@ -87,6 +153,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+[travis]: https://travis-ci.org/snowplow/spark-streaming-example-project
+[travis-image]: https://travis-ci.org/snowplow/spark-streaming-example-project.png?branch=master
+[license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
+[license]: http://www.apache.org/licenses/LICENSE-2.0
+[release-image]: http://img.shields.io/badge/release-0.1.0-blue.svg?style=flat
+[releases]: https://github.com/snowplow/spark-streaming-example-project/releases
 
 [spark]: http://spark-project.org/
 [wordcount]: https://github.com/twitter/scalding/blob/master/README.md
@@ -113,8 +186,5 @@ limitations under the License.
 [lemur]: https://github.com/TheClimateCorporation/lemur
 [boto]: http://boto.readthedocs.org/en/latest/ref/emr.html
 
-[license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
-[license]: http://www.apache.org/licenses/LICENSE-2.0
-[release-image]: http://img.shields.io/badge/release-0.1.0-blue.svg?style=flat
-[releases]: https://github.com/snowplow/spark-streaming-example-project/releases
+
 [data-table]: https://raw.githubusercontent.com/bigsnarfdude/snowplow.github.com/spark-streaming-example-project/assets/img/blog/2015/06/aggregateRecords2.png
