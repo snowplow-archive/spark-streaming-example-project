@@ -1,0 +1,40 @@
+##################################
+#   Default Configuration for    #
+# Kinesis -> Spark -> DynanoDB   #
+##################################
+
+
+kinesis {
+
+  streamName: "eventStream"
+
+  region: "us-east-1"
+
+  endpointURL: "https://kinesis.us-east-1.amazonaws.com"
+
+
+}
+
+
+spark {
+
+  appName: "StreamingCountsApp"
+
+  checkpointInterval: "10"
+
+  initialPosition: "LATEST"
+
+  storageLevel: "MEMORY_AND_DISK_2"
+
+  master: "local[2]"
+
+  batchInterval: "2000"
+
+}
+
+
+dynamodb {
+
+  recordsTableName: "AggregateRecords"
+
+}
