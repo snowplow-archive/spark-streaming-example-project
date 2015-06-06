@@ -97,9 +97,10 @@ def build_spark():
     Usage:
        inv build_spark
     """
+    run("rm -rf master.zip spark-master", pty=True)
     run("wget https://github.com/apache/spark/archive/master.zip")
     run("unzip master.zip", pty=True)
-    run("cd spark-master && mvn -Pkinesis-asl -DskipTests clean package", pty=True)
+    run('export MAVEN_OPTS="-Xmx1g -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=256m" && cd spark-master && mvn -Pkinesis-asl -DskipTests clean package', pty=True)
 
 
 @task
