@@ -53,12 +53,12 @@ object DynamoUtils {
    * Function wraps AWS Java put operation to DynamoDB table pre-created by python utility script
    * for this Spark Streaming application
    */
-  def putItem(tableName: String, bucketStart: String, eventType: String, createdAt: String, updatedAt: String, count: String) {
+  def putItem(tableName: String, bucketStart: String, createdAt: String, eventType: String, updatedAt: String, count: String) {
 
     // AggregateRecords column names
     val tablePrimaryKeyName = "BucketStart"
-    val tableEventTypeSecondayKeyName = "EventType"
-    val tableCreatedAtColumnName = "CreatedAt"
+    val tableCreatedAtSecondaryKeyName = "CreatedAt"
+    val tableEventTypeColumnName = "EventType"
     val tableUpdatedAtColumnName = "UpdatedAt"
     val tableCountColumnName = "Count"
 
@@ -71,8 +71,8 @@ object DynamoUtils {
       println("Adding data to " + tableName)
 
       val item = new Item().withPrimaryKey(tablePrimaryKeyName, bucketStart)
-        .withString(tableEventTypeSecondayKeyName, eventType)
-        .withString(tableCreatedAtColumnName, createdAt)
+        .withString(tableCreatedAtSecondaryKeyName, createdAt)
+        .withString(tableEventTypeColumnName, eventType)
         .withString(tableUpdatedAtColumnName, updatedAt)
         .withString(tableCountColumnName, count)
 

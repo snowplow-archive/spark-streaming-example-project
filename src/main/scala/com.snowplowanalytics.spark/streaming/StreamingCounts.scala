@@ -85,13 +85,14 @@ object StreamingCounts {
     countedEventTypesPerMinute.foreachRDD { rdd =>
       rdd.foreach { recordsList =>
         recordsList._2.foreach { record =>
-          // tableName:String, bucketStart:String, eventType:String, createdAt:String, updatedAt:String, count:String
+          // tableName:String, bucketStart:String, createdAt:String, eventType:String, updatedAt:String, count:String
+
           DynamoUtils.putItem(
             config.recordsTableName,
             recordsList._1.toString,
+            DynamoUtils.timeNow(),
             record._1,
             DynamoUtils.timeNow(),
-            recordsList._1.toString,
             record._2.toString
           )
         }

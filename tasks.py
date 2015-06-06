@@ -33,7 +33,7 @@ THROUGHPUT_READ = 20
 THROUGHPUT_WRITE = 20
 
 
-# AWS Kinesis
+# AWS Kinesis Data Generator
 def picker(seq):
   """
   Returns a new function that can be called without arguments
@@ -68,9 +68,6 @@ def write_event(conn, stream_name):
 def generate_events(profile, region, stream):
     """
     load demo data with python generator script for SimpleEvents
-
-    Usage:
-       inv load_kinesis
     """
     conn = kinesis.connect_to_region(region, profile_name=profile)
     while True:
@@ -83,19 +80,14 @@ def generate_events(profile, region, stream):
 def mem_spark():
     """
     set memory maven for Apache Spark with Kinesis support
-
-    Usage:
-       inv mem_spark
     """
     run('export MAVEN_OPTS="-Xmx1g -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=256m"', pty=True)
+
 
 @task
 def build_spark():
     """
     compile, build and assembly Apache Spark with Kinesis support
-
-    Usage:
-       inv build_spark
     """
     run("rm -rf master.zip spark-master", pty=True)
     run("wget https://github.com/apache/spark/archive/master.zip")
@@ -108,9 +100,6 @@ def assemble_project():
     """
     build spark-streaming-example-project
     and package into "fat jar" ready for spark-submit
-
-    Usage:
-       inv assembly
     """
     run("sbt assembly", pty=True)
 
@@ -119,26 +108,21 @@ def assemble_project():
 def create_profile(profile):
     """
     Create a profile
-
-    Usage:
-    inv create_profile profile
     """
     run("aws configure --profile {}".format(profile), pty=True)
+
 
 @task
 def create_dynamodb_table(profile, region, table):
     """
     DynamoDB table creation with AWS Boto library in Python
-
-    Usage:
-    inv create_dynamodb_table
     """
 
     connection = boto.dynamodb2.connect_to_region(region, profile_name=profile)
     aggregate = Table.create(table,
                              schema=[
                                  HashKey("BucketStart"),
-                                 RangeKey("UpdatedAt"),
+                                 RangeKey("CreatedAt"),
                              ],
                              throughput={
                                  'read': THROUGHPUT_READ,
@@ -152,21 +136,16 @@ def create_dynamodb_table(profile, region, table):
 def create_kinesis_stream(profile, stream):
     """
     create our Kinesis stream
-
-    Usage:
-        inv create_kinesis
     """
 
     # TODO: switch to use boto
     run("aws kinesis create-stream --stream-name {} --shard-count 1 --profile {}".format(stream, profile), pty=True)
 
+
 @task
 def describe_kinesis_stream(profile, stream):
     """
     show status Kinesis stream named eventStream
-
-    Usage:
-        inv show_kinesis
     """
 
     # TODO: switch to use boto
@@ -178,9 +157,6 @@ def run_project(config_path):
     """
     Submits the compiled "fat jar" to Apache Spark and
     starts Spark Streaming based on project settings
-
-    Usage:
-        inv run_spark_streaming
     """
     run("./spark/bin/spark-submit \
         --class com.snowplowanalytics.spark.streaming.StreamingCountsApp \

@@ -60,7 +60,7 @@ Assuming git, **[Vagrant] [vagrant-install]** and **[VirtualBox] [virtualbox-ins
  host$ cd spark-streaming-example-project
  host$ vagrant up && vagrant ssh
 guest$ cd /vagrant
-guest$ sbt compile
+guest$ sbt assembly
 ```
 
 ## Tutorial
