@@ -12,7 +12,6 @@
  */
 package com.snowplowanalytics.spark.streaming
 
-
 // Java
 import java.io.File
 import java.io.FileReader
@@ -32,7 +31,6 @@ import org.clapper.argot._
 // Spark
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.{Minutes, Seconds, Milliseconds}
-
 
 /**
  * The entry point class for the Spark Streaming Application.
@@ -79,7 +77,7 @@ object StreamingCountsApp {
     val conf = config.value.getOrElse(throw new RuntimeException("--config argument must be provided"))
 
     // create Spark Streaming Config from hocon file in resource directory
-    val scc=StreamingCountsConfig(
+    val scc = StreamingCountsConfig(
       region = conf.getConfig("kinesis").getString("region"),
       streamName = conf.getConfig("kinesis").getString("streamName"),
       endpointURL = conf.getConfig("kinesis").getString("endpointURL"),
