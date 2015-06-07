@@ -60,7 +60,7 @@ Assuming git, **[Vagrant] [vagrant-install]** and **[VirtualBox] [virtualbox-ins
  host$ cd spark-streaming-example-project
  host$ vagrant up && vagrant ssh
 guest$ cd /vagrant
-guest$ sbt assembly
+guest$ sbt compile
 ```
 
 ## Tutorial
@@ -115,6 +115,22 @@ Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.064528", "type": "Gree
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.757797", "type": "Red", "id": "eb84b0d1-f793-4213-8a65-2fb09eab8c5c"}
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:44.295972", "type": "Yellow", "id": "4654bdc8-86d4-44a3-9920-fee7939e2582"}
 ...
+```
+
+Building Spark Streaming with Kinesis support:
+
+```bash
+$ inv build_spark
+...
+[INFO] Spark Kinesis Integration ......................... SUCCESS [1:11.115s]
+...
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 1:29:00.686s
+[INFO] Finished at: Sun Jun 07 00:32:09 UTC 2015
+[INFO] Final Memory: 94M/665M
+[INFO] ------------------------------------------------------------------------
 ```
 
 ## Step 3 - Running Spark-Streaming-Example-Project on Local

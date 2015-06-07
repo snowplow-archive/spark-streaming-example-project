@@ -75,15 +75,6 @@ def generate_events(profile, region, stream):
         print "Event sent to Kinesis: {}".format(event_json)
         time.sleep(.5)
 
-
-@task
-def mem_spark():
-    """
-    set memory maven for Apache Spark with Kinesis support
-    """
-    run('export MAVEN_OPTS="-Xmx1g -XX:MaxPermSize=256M -XX:ReservedCodeCacheSize=256m"', pty=True)
-
-
 @task
 def build_spark():
     """

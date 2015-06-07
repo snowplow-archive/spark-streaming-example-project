@@ -34,8 +34,9 @@ case class StreamingCountsConfig(
   batchInterval:      Duration,
   recordsTableName:   String
 ) {
+
   /**
-   * Gets the Kinesis endpoint from the region.
-   * */
+   * The Kinesis endpoint from the region.
+   */
   val endpoint = s"https://kinesis.${this.region}.amazonaws.com"
 }
