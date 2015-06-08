@@ -19,16 +19,13 @@ import java.util.Date
 import java.util.TimeZone
 import java.text.SimpleDateFormat
 
-
 // AWS Authentication
 // http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/DefaultAWSCredentialsProviderChain.html
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 
-
 // AWS DynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.amazonaws.services.dynamodbv2.document.DynamoDB
-import com.amazonaws.services.dynamodbv2.document.Item
+import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, DynamoDB, Item}
 
 
 /**
@@ -50,15 +47,43 @@ object DynamoUtils {
   }
 
   /**
-   * Function wraps AWS Java put operation to DynamoDB table pre-created by python utility script
-   * for this Spark Streaming application
+   * Function wraps get or create item in DynamoDB table
    */
-  def putItem(tableName: String, bucketStart: String, createdAt: String, eventType: String, updatedAt: String, count: String) {
+  def getOrCreate(tableName: String, bucketStart: String, eventType: String, createdAt: String,  updatedAt: String, count: Int){
+
+    val recordInTable = getItem(tableName, bucketStart, eventType)
+    println(recordInTable)
+    if (recordInTable == null) {
+      DynamoUtils.putItem(tableName, bucketStart, eventType, createdAt, updatedAt, count)
+    } else {
+      val oldCreatedAt = recordInTable.getJSON("CreatedAt").replace("\"", "").replace("\\", "")
+      val oldCount = recordInTable.getJSON("Count").toInt
+      val newCount = oldCount + count.toInt
+      DynamoUtils.putItem(tableName, bucketStart, eventType, oldCreatedAt, updatedAt, newCount)
+    }
+  }
+
+
+  /**
+   * Function wraps AWS Java getItemOutcome operation to DynamoDB table
+   */
+  def getItem(tableName: String, bucketStart: String, eventType: String): Item = {
+
+    val table = dynamoDB.getTable(tableName)
+    val items = table.getItemOutcome("BucketStart", bucketStart, "EventType", eventType)
+    items.getItem
+  }
+
+
+  /**
+   * Function wraps AWS Java putItem operation to DynamoDB table
+   */
+  def putItem(tableName: String, bucketStart: String, eventType: String, createdAt: String,  updatedAt: String, count: Int) {
 
     // AggregateRecords column names
     val tablePrimaryKeyName = "BucketStart"
-    val tableCreatedAtSecondaryKeyName = "CreatedAt"
-    val tableEventTypeColumnName = "EventType"
+    val tableEventTypeSecondaryKeyName = "EventType"
+    val tableCreatedAtColumnName = "CreatedAt"
     val tableUpdatedAtColumnName = "UpdatedAt"
     val tableCountColumnName = "Count"
 
@@ -71,13 +96,13 @@ object DynamoUtils {
       println("Adding data to " + tableName)
 
       val item = new Item().withPrimaryKey(tablePrimaryKeyName, bucketStart)
-        .withString(tableCreatedAtSecondaryKeyName, createdAt)
-        .withString(tableEventTypeColumnName, eventType)
+        .withString(tableEventTypeSecondaryKeyName, eventType)
+        .withString(tableCreatedAtColumnName, createdAt)
         .withString(tableUpdatedAtColumnName, updatedAt)
-        .withString(tableCountColumnName, count)
+        .withInt(tableCountColumnName, count)
 
       // saving the data to DynamoDB AggregrateRecords table
-      println(item)
+      // println(item)
       table.putItem(item)
     } catch {
       case e: Exception => {
