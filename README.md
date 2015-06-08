@@ -8,7 +8,7 @@ This is a simple time series analysis job written in Scala for the [Spark] [spar
 __First__, this app generates/sends raw events to AWS Kinesis. __Second__, we process the raw events with Apache Spark Streaming. Our data processing
 sorts each event into a "bucket". __Third__, Spark counts and aggregates the raw events into 1 minute buckets. __Last__, this Spark app takes the aggregate records and saves the aggregate events into AWS DynamoDB Database. Read More about 
 [Kinesis and Spark Streaming](https://spark.apache.org/docs/latest/streaming-kinesis-integration.html).
-Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/05/spark-streaming-example-project-0.1.0-released/) to get the project up and running yourself.
+Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/09/spark-streaming-example-project-0.1.0-released/) to get the project up and running yourself.
 
 Input: Example of a raw events in JSON format
 
@@ -33,13 +33,13 @@ We assume you have an Internet connection so we can access services and download
 	
 # Quickstart for those who have Apache Spark already compiled with Kinesis
 
-## Step 1 - Cloning Spark-Streaming-Example-Project
+#### Step 1 - Cloning Spark-Streaming-Example-Project
 
 ```bash
 host> git clone repo
 ```
 
-## Step 2 - Building Spark-Streaming-Example-Project
+#### Step 2 - Building Spark-Streaming-Example-Project
 
 ```bash
 host> sbt assembly
@@ -64,6 +64,8 @@ guest$ sbt compile
 ```
 
 ## Tutorial
+Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/09/spark-streaming-example-project-0.1.0-released/) to get the project up and running yourself.
+
 
 ```bash
 $ inv create_profile my-profile
@@ -133,8 +135,17 @@ $ inv build_spark
 [INFO] ------------------------------------------------------------------------
 ```
 
-## Step 3 - Running Spark-Streaming-Example-Project on Local
+Submit your application to Spark:
+Open a new terminal window. Start a second shell into the vagrant box with:
+```bash
+host> vagrant ssh
+```
+Start Apache Spark Streaming system with this command:
+```bash
+vagrant@spark-streaming-example-project:/vagrant$   inv spark_streaming
+```
 
+__NOTE__: For those interested in understanding what is behind the __inv spark_streaming__ command:
 ```bash
 $SPARK_HOME/bin/spark-submit --class com.snowplowanalytics.spark.streaming.StreamingCountsApp \
                              --master local[2] \
@@ -155,7 +166,7 @@ To invoke/schedule your Spark job on EMR, check out:
 
 ## Roadmap
 
-* Spark Streaming Machine Learning example
+* Maybe a Spark Streaming Machine Learning example
 
 ## Copyright and license
 
