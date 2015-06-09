@@ -14,8 +14,9 @@ package com.snowplowanalytics.spark.streaming
 package kinesis
 
 // AWS KCL
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.services.kinesis.AmazonKinesisClient
+
 
 object KinesisUtils {
 
@@ -37,10 +38,10 @@ object KinesisUtils {
       .size
 
   /**
-   * Finds AWS Creds and creates Kinesis Client
+   * Finds AWS Credential by provided awsProfile and creates Kinesis Client
    */
-  def setupKinesisClientConnection(endpointUrl: String): AmazonKinesisClient = {
-    val credentials = new DefaultAWSCredentialsProviderChain().getCredentials()
+  def setupKinesisClientConnection(endpointUrl: String, awsProfile: String): AmazonKinesisClient = {
+    val credentials = new ProfileCredentialsProvider(awsProfile)
     val akc = new AmazonKinesisClient(credentials)
     akc.setEndpoint(endpointUrl)
     akc

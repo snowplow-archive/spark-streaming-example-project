@@ -50,7 +50,7 @@ object StreamingCountsApp {
     val parser = new ArgotParser(
       programName = "generated",
       compactUsage = true,
-      preUsage = Some("%s: Version %s. Copyright (c) 2013, %s.".format(
+      preUsage = Some("%s: Version %s. Copyright (c) 2015, %s.".format(
         generated.Settings.name,
         generated.Settings.version,
         generated.Settings.organization)
@@ -86,7 +86,8 @@ object StreamingCountsApp {
       appName = conf.getConfig("spark").getString("appName"),
       master = conf.getConfig("spark").getString("master"),
       batchInterval =  Milliseconds(conf.getConfig("spark").getInt("batchInterval")),
-      tableName = conf.getConfig("dynamodb").getString("tableName")
+      tableName = conf.getConfig("dynamodb").getString("tableName"),
+      awsProfile = conf.getConfig("aws").getString("awsProfile")
     )
 
     // start StreamingCounts application with config object

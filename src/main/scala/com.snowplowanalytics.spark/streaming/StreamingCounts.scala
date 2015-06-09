@@ -13,6 +13,8 @@
 package com.snowplowanalytics.spark.streaming
 
 // Spark
+
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.kinesis.KinesisUtils
@@ -57,10 +59,13 @@ object StreamingCounts {
   def execute(config: StreamingCountsConfig) {
 
     // setting up Spark Streaming connection to Kinesis
-    val kinesisClient = KU.setupKinesisClientConnection(config.endpointUrl)
+    val kinesisClient = KU.setupKinesisClientConnection(config.endpointUrl, config.awsProfile)
     require(kinesisClient != null,
       "No AWS credentials found. Please specify credentials using one of the methods specified " +
         "in http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html")
+
+    // setting up Spark Streaming connection to DynamoDB
+    lazy val dynamoConnection = DynamoUtils.setupDynamoClientConnection(config.awsProfile)
 
     val streamingSparkContext = setupSparkContext(config)
     val numShards = KU.getShardCount(kinesisClient, config.streamName)
@@ -96,6 +101,7 @@ object StreamingCounts {
       rdd.foreach { case (bucket, aggregates) =>
         aggregates.foreach { case (eventType, count) =>
           DynamoUtils.setOrUpdateCount(
+            dynamoConnection,
             config.tableName,
             bucket.toString,
             eventType,

@@ -31,7 +31,8 @@ case class StreamingCountsConfig(
   appName:            String,
   master:             String,
   batchInterval:      Duration,
-  tableName:          String
+  tableName:          String,
+  awsProfile:         String
 ) {
 
   /**
