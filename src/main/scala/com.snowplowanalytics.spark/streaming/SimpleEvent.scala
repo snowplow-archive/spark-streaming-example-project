@@ -12,11 +12,16 @@
  */
 package com.snowplowanalytics.spark.streaming
 
+// Java
 import java.text.SimpleDateFormat
 import java.util.Date
-import com.snowplowanalytics.spark.streaming.storage.BucketingStrategy
+
+// json4s
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+
+// This project
+import storage.BucketingStrategy
 
 /**
  * Companion object for creating a SimpleEvent
@@ -26,10 +31,14 @@ object SimpleEvent {
 
   private val format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss")
 
-  // Function converts date string into Date object
+  /**
+   * Converts date string into Date object
+   */
   def convertStringToDate(dateString: String): Date = format.parse(dateString)
 
-  // Function converts Kinesis ByteArray of JSON data into SimpleEvent objects
+  /**
+   * Converts Kinesis ByteArray of JSON data into SimpleEvent objects
+   */
   def fromJson(byteArray: Array[Byte]): SimpleEvent = {
     implicit val formats = DefaultFormats
     val newString = new String(byteArray, "UTF-8")
@@ -49,7 +58,7 @@ object SimpleEvent {
  */
 case class SimpleEvent(id: String, timestamp: String, `type`: String) {
 
-  // Function converts strings into Time Bucket using Bucketing Strategy
+  // Convert timestamp into Time Bucket using Bucketing Strategy
   val bucket = BucketingStrategy.bucket(SimpleEvent.convertStringToDate(timestamp))
 
 }

@@ -13,11 +13,9 @@
 package com.snowplowanalytics.spark.streaming
 package storage
 
-
 // Java
 import java.util.Date
 import java.text.SimpleDateFormat
-
 
 /**
  * Object uses downsampling method to create metadata from each

@@ -80,14 +80,13 @@ object StreamingCountsApp {
     val scc = StreamingCountsConfig(
       region = conf.getConfig("kinesis").getString("region"),
       streamName = conf.getConfig("kinesis").getString("streamName"),
-      endpointURL = conf.getConfig("kinesis").getString("endpointURL"),
       checkpointInterval = Minutes(conf.getConfig("spark").getInt("checkpointInterval")),
       initialPosition = InitialPositionInStream.LATEST,
       storageLevel = StorageLevel.MEMORY_AND_DISK_2,
       appName = conf.getConfig("spark").getString("appName"),
       master = conf.getConfig("spark").getString("master"),
       batchInterval =  Milliseconds(conf.getConfig("spark").getInt("batchInterval")),
-      recordsTableName = conf.getConfig("dynamodb").getString("recordsTableName")
+      tableName = conf.getConfig("dynamodb").getString("tableName")
     )
 
     // start StreamingCounts application with config object

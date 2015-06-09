@@ -13,7 +13,6 @@
 package com.snowplowanalytics.spark.streaming
 package storage
 
-
 // Java
 import java.util.Date
 import java.util.TimeZone
@@ -26,7 +25,6 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 // AWS DynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, DynamoDB, Item}
-
 
 /**
  * Object sets up singleton that finds AWS credentials for DynamoDB to access the
@@ -49,7 +47,7 @@ object DynamoUtils {
   /**
    * Function wraps get or create item in DynamoDB table
    */
-  def getOrCreate(tableName: String, bucketStart: String, eventType: String, createdAt: String,  updatedAt: String, count: Int){
+  def setOrUpdateCount(tableName: String, bucketStart: String, eventType: String, createdAt: String,  updatedAt: String, count: Int){
 
     val recordInTable = getItem(tableName, bucketStart, eventType)
     println(recordInTable)

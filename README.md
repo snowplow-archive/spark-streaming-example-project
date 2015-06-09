@@ -13,9 +13,7 @@ Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/09/s
 Input: Example of a raw events in JSON format
 
 ```bash
-{ "dateString": "2015-06-22T00:23:24.306091", "eventType": "Red" }
-{ "dateString": "2015-06-22T00:23:24.450129", "eventType": "Yellow" }
-{ "dateString": "2015-06-22T00:23:24.826703", "eventType": "Blue" }
+{"timestamp": "2015-06-05T12:54:43.064528", "type": "Green", "id": "4ec80fb1-0963-4e35-8f54-ce760499d974"}
 ```
 
 Output: Example of the AggregateRecords table in DynamoDB
@@ -29,27 +27,6 @@ Please ensure your AWS credentials have access policies assigned to use Cloudwat
 We assume you have an Internet connection so we can access services and download code from github. Also, you will need git, Vagrant and VirtualBox installed locally. This project is specifically configured to run in AWS region "us-east-1" to ensure all AWS services are available. Building Spark on a vagrant box requires RAM. Ensure you have at least 8GB of RAM and 64 bit OS hosting vagrant.
 
 ** Running this requires an Amazon AWS account, and it will incur charges **
-	
-	
-# Quickstart for those who have Apache Spark already compiled with Kinesis
-
-#### Step 1 - Cloning Spark-Streaming-Example-Project
-
-```bash
-host> git clone repo
-```
-
-#### Step 2 - Building Spark-Streaming-Example-Project
-
-```bash
-host> sbt assembly
-```
-
-The 'fat jar' is now available as:
-
-```bash
-target/scala-2.10/simple-project_2.10-0.1.jar
-```
 
 ## Developer Quickstart
 
@@ -71,7 +48,7 @@ Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/09/s
 $ inv create_profile my-profile
 AWS Access Key ID [None]: ...
 AWS Secret Access Key [None]: ...
-Default region name [None]: eu-west-1
+Default region name [None]: us-east-1
 Default output format [None]:
 ```
 
@@ -87,7 +64,7 @@ $ inv describe_kinesis_stream my-profile my-stream
     "StreamDescription": {
         "StreamStatus": "ACTIVE",
         "StreamName": "my-stream",
-        "StreamARN": "arn:aws:kinesis:eu-west-1:719197435995:stream/my-stream",
+        "StreamARN": "arn:aws:kinesis:us-east-1:719197435995:stream/my-stream",
         "Shards": [
             {
                 "ShardId": "shardId-000000000000",
@@ -106,13 +83,13 @@ $ inv describe_kinesis_stream my-profile my-stream
 
 
 ```bash
-$ inv create_dynamodb_table my-profile eu-west-1 my-table
+$ inv create_dynamodb_table my-profile us-east-1 my-table
 ```
 
 Now start sending events to the stream:
 
 ```bash
-$ inv generate_events my-profile eu-west-1 my-stream
+$ inv generate_events my-profile us-east-1 my-stream
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.064528", "type": "Green", "id": "4ec80fb1-0963-4e35-8f54-ce760499d974"}
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.757797", "type": "Red", "id": "eb84b0d1-f793-4213-8a65-2fb09eab8c5c"}
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:44.295972", "type": "Yellow", "id": "4654bdc8-86d4-44a3-9920-fee7939e2582"}
@@ -135,34 +112,23 @@ $ inv build_spark
 [INFO] ------------------------------------------------------------------------
 ```
 
+Now build our application:
+
+```bash
+$ inv assemble_project
+```
+
 Submit your application to Spark:
+
 Open a new terminal window. Start a second shell into the vagrant box with:
-```bash
-host> vagrant ssh
-```
+
 Start Apache Spark Streaming system with this command:
+
 ```bash
-vagrant@spark-streaming-example-project:/vagrant$   inv spark_streaming
+$ inv run_project config/config.hocon.sample
 ```
 
-__NOTE__: For those interested in understanding what is behind the __inv spark_streaming__ command:
-```bash
-$SPARK_HOME/bin/spark-submit --class com.snowplowanalytics.spark.streaming.StreamingCountsApp \
-                             --master local[2] \
-                             spark-streaming-example-project/target/scala-2.10/spark-streaming-example-project-0.1.0.jar \
-                             --config spark-streaming-example-project/src/main/resources/config.hocon.sample
-```
-
-## Next steps
-
-Fork this project and adapt it into your own custom Spark job.
-
-To invoke/schedule your Spark job on EMR, check out:
-
-* [Spark Plug] [spark-plug] for Scala
-* [Elasticity] [elasticity] for Ruby
-* [Boto] [boto] for Python
-* [Lemur] [lemur] for Clojure
+If you have updated any of the configuration options above (e.g. stream name or region), then you will have to update the `config.hocon.sample` file accordingly.
 
 ## Roadmap
 

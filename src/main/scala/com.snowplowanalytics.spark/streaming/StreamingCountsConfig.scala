@@ -25,18 +25,17 @@ import org.apache.spark.streaming.Duration
 case class StreamingCountsConfig(
   region:             String,
   streamName:         String,
-  endpointURL:        String,
   checkpointInterval: Duration,
   initialPosition:    InitialPositionInStream,
   storageLevel:       StorageLevel,
   appName:            String,
   master:             String,
   batchInterval:      Duration,
-  recordsTableName:   String
+  tableName:          String
 ) {
 
   /**
    * The Kinesis endpoint from the region.
    */
-  val endpoint = s"https://kinesis.${this.region}.amazonaws.com"
+  val endpointUrl = s"https://kinesis.${region}.amazonaws.com"
 }

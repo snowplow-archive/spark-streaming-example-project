@@ -1,0 +1,30 @@
+###################################
+#    Sample configuration for     #
+# spark-streaming-example-project #
+###################################
+
+
+kinesis {
+
+  streamName: "my-stream"
+
+  region: "us-east-1"
+}
+
+
+spark {
+
+  appName: "StreamingCountsApp"
+
+  checkpointInterval: 10 # Secs
+
+  master: "local[2]" # At least 2 threads
+
+  batchInterval: 2000 # Ms
+}
+
+
+dynamodb {
+
+  tableName: "my-table"
+}

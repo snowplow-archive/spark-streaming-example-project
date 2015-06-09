@@ -12,7 +12,6 @@
  */
 package com.snowplowanalytics.spark.streaming
 
-
 // Spark
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming._
@@ -21,7 +20,6 @@ import org.apache.spark.streaming.kinesis.KinesisUtils
 // This project
 import storage.DynamoUtils
 import kinesis.{KinesisUtils => KU}
-
 
 /**
  * Core of the Spark Streaming Application
@@ -35,14 +33,14 @@ import kinesis.{KinesisUtils => KU}
  */
 object StreamingCounts {
 
-  private val AppName = "StreamingCounts"
+  private val AppName = "StreamingCountsApp"
 
   /**
    * Private function to set up Spark Streaming
    *
    * @param config The configuration for our job using StreamingCountsConfig.scala
    */
-  private def setUpSparkContext(config: StreamingCountsConfig): StreamingContext = {
+  private def setupSparkContext(config: StreamingCountsConfig): StreamingContext = {
     val streamingSparkContext = {
       val sparkConf = new SparkConf().setAppName(AppName).setMaster(config.master)
       new StreamingContext(sparkConf, config.batchInterval)
@@ -59,46 +57,57 @@ object StreamingCounts {
   def execute(config: StreamingCountsConfig) {
 
     // setting up Spark Streaming connection to Kinesis
-    val kinesisClient = KU.setUpKinesisClientConnection(config)
+    val kinesisClient = KU.setupKinesisClientConnection(config.endpointUrl)
     require(kinesisClient != null,
       "No AWS credentials found. Please specify credentials using one of the methods specified " +
         "in http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/credentials.html")
-    val streamingSparkContext = setUpSparkContext(config)
+
+    val streamingSparkContext = setupSparkContext(config)
     val numShards = KU.getShardCount(kinesisClient, config.streamName)
     val sparkDStreams = (0 until numShards).map { i =>
-      KinesisUtils.createStream(ssc=streamingSparkContext,
-        streamName=config.streamName,
-        endpointUrl=config.endpointURL,
-        initialPositionInStream=config.initialPosition,
-        checkpointInterval=config.batchInterval,
-        storageLevel=config.storageLevel)
+      KinesisUtils.createStream(
+        ssc = streamingSparkContext,
+        streamName = config.streamName,
+        endpointUrl = config.endpointUrl,
+        initialPositionInStream = config.initialPosition,
+        checkpointInterval = config.batchInterval,
+        storageLevel = config.storageLevel
+        )
     }
 
-    // Spark Stream processing of raw events into aggregate events
-    val unionStreams = streamingSparkContext.union(sparkDStreams)
-    val event = unionStreams.map(byteArray => (SimpleEvent.fromJson(byteArray)))
-    val bucketed = event.map(e => (e.bucket, e.`type`))
-    val computedStream = bucketed.groupByKey()
-    val countedEventTypesPerMinute = computedStream.map(row => (row._1, row._2.groupBy(identity).mapValues(_.size)))
+    // Map phase: union DStreams, derive events, determine bucket
+    val bucketedEvents = streamingSparkContext
+      .union(sparkDStreams)
+      .map { bytes =>
+        val e = SimpleEvent.fromJson(bytes)
+        (e.bucket, e.`type`)
+      }
 
-    // iterating each aggregate record and saving the record into DynamoDB for persistent storage
-    countedEventTypesPerMinute.foreachRDD { rdd =>
-      rdd.foreach { recordsList =>
-        recordsList._2.foreach { record =>
-          // tableName:String, bucketStart:String, eventType:String, createdAt:String, updatedAt:String, count:Int
-          DynamoUtils.getOrCreate(
-            config.recordsTableName,
-            recordsList._1.toString,
-            record._1,
+    // Reduce phase: group by key then by count
+    val bucketedEventCounts = bucketedEvents
+      .groupByKey
+      .map { case (eventType, events) =>
+        val count = events.groupBy(identity).mapValues(_.size)
+        (eventType, count)
+      }
+
+    // Iterate over each aggregate record and save the record into DynamoDB
+    bucketedEventCounts.foreachRDD { rdd =>
+      rdd.foreach { case (bucket, aggregates) =>
+        aggregates.foreach { case (eventType, count) =>
+          DynamoUtils.setOrUpdateCount(
+            config.tableName,
+            bucket.toString,
+            eventType,
             DynamoUtils.timeNow(),
             DynamoUtils.timeNow(),
-            record._2.toInt
+            count.toInt
           )
         }
       }
     }
 
-    // start Apache Spark Stream process
+    // Start Spark Streaming process
     streamingSparkContext.start()
     streamingSparkContext.awaitTermination()
   }

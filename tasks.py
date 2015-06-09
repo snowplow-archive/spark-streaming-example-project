@@ -150,7 +150,7 @@ def run_project(config_path):
     Submits the compiled "fat jar" to Apache Spark and
     starts Spark Streaming based on project settings
     """
-    run("./spark/bin/spark-submit \
+    run("./spark-master/bin/spark-submit \
         --class com.snowplowanalytics.spark.streaming.StreamingCountsApp \
         --master local[4] \
         ./target/scala-2.10/{} \
