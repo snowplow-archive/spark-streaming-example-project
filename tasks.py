@@ -23,7 +23,7 @@ from boto.dynamodb2.table import Table
 from boto.dynamodb2.types import NUMBER
 
 
-JAR_FILE = "spark-streaming-example-project-0.1-0.jar"
+JAR_FILE = "spark-streaming-example-project-0.1.0.jar"
 
 # Selection of EventType values
 COLORS = ['Red','Orange','Yellow','Green','Blue']
