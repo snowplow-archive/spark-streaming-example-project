@@ -88,7 +88,7 @@ def build_spark():
 
 
 @task
-def assemble_project():
+def build_project():
     """
     build spark-streaming-example-project
     and package into "fat jar" ready for spark-submit
