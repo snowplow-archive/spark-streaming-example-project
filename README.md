@@ -45,21 +45,21 @@ Follow along in this [blog post] (http://snowplowanalytics.com/blog/2015/06/09/s
 
 
 ```bash
-$ inv create_profile my-profile
+$ aws configure
 AWS Access Key ID [None]: ...
 AWS Secret Access Key [None]: ...
 Default region name [None]: us-east-1
-Default output format [None]:
+Default output format [None]: json
 ```
 
 ```bash
-$ inv create_kinesis_stream my-profile my-stream
+$ inv create_kinesis_stream default my-stream
 ```
 
 Wait a minute and then:
 
 ```bash
-$ inv describe_kinesis_stream my-profile my-stream
+$ inv describe_kinesis_stream default my-stream
 {
     "StreamDescription": {
         "StreamStatus": "ACTIVE",
@@ -83,13 +83,13 @@ $ inv describe_kinesis_stream my-profile my-stream
 
 
 ```bash
-$ inv create_dynamodb_table my-profile us-east-1 my-table
+$ inv create_dynamodb_table default us-east-1 my-table
 ```
 
 Now start sending events to the stream:
 
 ```bash
-$ inv generate_events my-profile us-east-1 my-stream
+$ inv generate_events default us-east-1 my-stream
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.064528", "type": "Green", "id": "4ec80fb1-0963-4e35-8f54-ce760499d974"}
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:43.757797", "type": "Red", "id": "eb84b0d1-f793-4213-8a65-2fb09eab8c5c"}
 Event sent to Kinesis: {"timestamp": "2015-06-05T12:54:44.295972", "type": "Yellow", "id": "4654bdc8-86d4-44a3-9920-fee7939e2582"}

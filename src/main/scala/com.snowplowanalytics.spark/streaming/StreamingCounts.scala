@@ -35,8 +35,6 @@ import kinesis.{KinesisUtils => KU}
  */
 object StreamingCounts {
 
-  private val AppName = "StreamingCountsApp"
-
   /**
    * Private function to set up Spark Streaming
    *
@@ -44,7 +42,7 @@ object StreamingCounts {
    */
   private def setupSparkContext(config: StreamingCountsConfig): StreamingContext = {
     val streamingSparkContext = {
-      val sparkConf = new SparkConf().setAppName(AppName).setMaster(config.master)
+      val sparkConf = new SparkConf().setAppName(config.appName).setMaster(config.master)
       new StreamingContext(sparkConf, config.batchInterval)
     }
     streamingSparkContext

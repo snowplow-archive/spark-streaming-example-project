@@ -35,6 +35,6 @@ dynamodb {
 
 aws {
 
-  awsProfile: "my-profile"
+  awsProfile: "default"
 
 }
