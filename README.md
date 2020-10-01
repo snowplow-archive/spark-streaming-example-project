@@ -4,9 +4,10 @@
 
 ## Introduction
 
-This is a simple time series analysis stream processing job ([introductory blog post] [blog-post]) written in Scala for the [Spark Streaming] [spark-streaming] cluster computing platform, processing JSON events from [Amazon Kinesis] [kinesis] and writing aggregates to [Amazon DynamoDB] [dynamodb].
 
-This was built by the Data Science team at [Snowplow Analytics] [snowplow], who use Spark Streaming in their client projects.
+This is a simple time-series analysis stream processing job ([introductory blog post] blog-post) written in Scala for the [Spark Streaming] spark-streaming cluster computing platform, processing JSON events from [Amazon Kinesis] kinesis and writing aggregates to [Amazon DynamoDB] dynamodb.
+This was built by the Data Science team at [Snowplow Analytics] snowplow, who use Spark Streaming in their client projects.
+
 
 **Running this requires an Amazon AWS account, and it will incur charges.**
 
@@ -24,7 +25,7 @@ We have implemented a super-simple analytics-on-write stream processing job usin
 }
 ```
 
-Our job counts the events by `type` and aggregates these counts into 1 minute buckets. The job then takes these aggregates and saves them into a table in DynamoDB:
+OOur job counts the events by type and aggregates these counts into 1-minute buckets. The job then takes these aggregates and saves them into a table in DynamoDB:
 
 ![dynamodb-table-image][dynamodb-table-image]
 
